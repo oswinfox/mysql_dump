@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+## VARIABLES --------------------------------------------------------------------
+MYSQL_USER=user_name_here
+MYSQL_PASS=pwd_here
+MYSQL_CONN="-u${MYSQL_USER} -p${MYSQL_PASS}"
+DATABASES_TO_EXCLUDE="test1"
+EXCLUSION_LIST="'information_schema','mysql'"
+SQLSTMT="SELECT schema_name FROM information_schema.schemata"                    
+SQLSTMT="${SQLSTMT} WHERE schema_name NOT IN (${EXCLUSION_LIST})"                
+MYSQLDUMP_DATABASES="--databases"
+
+for DB in `echo "${DATABASES_TO_EXCLUDE}"`; do
+    EXCLUSION_LIST="${EXCLUSION_LIST},'${DB}'"
+done
+
+for DB in `mysql $MYSQL_CONN -ANe"${SQLSTMT}"`; do
+    MYSQLDUMP_DATABASES="${MYSQLDUMP_DATABASES} ${DB}"
+done
+
+MYSQLDUMP_OPTIONS="--single-transaction --events --routines --triggers"
+
+	mysqldump $MYSQL_CONN ${MYSQLDUMP_OPTIONS} ${MYSQLDUMP_DATABASES} > SQLData.sql
